@@ -94,15 +94,16 @@ func (g *download) StartAll() {
 
 func (g *download) ConcatParts(){
 	os.RemoveAll("./final.mp4")
-	for i := 0; i < len(g.ranges); i++ {
+	for i := 0; i < 4; i++ {
 		file,e:=os.OpenFile(fmt.Sprintf("%s/part%d",path.Join(os.Args[0],".."),i ),
-			os.O_APPEND| os.O_CREATE| os.O_WRONLY | os.O_RDONLY, 0777)
+			 os.O_RDONLY, 0777)
 		if e !=nil{
 			panic(e.Error())
 		}
 		f,_:=file.Stat()
 		var b =make([]byte, f.Size())
 		file.Read(b)
+		file.Close()
 		fmt.Println(b[len(b)-10:],f.Size())
 		out,_:=os.OpenFile("./final.mp4", os.O_APPEND| os.O_CREATE| os.O_WRONLY | os.O_RDONLY , 0777)
 		bb,e:=out.Write(b)
