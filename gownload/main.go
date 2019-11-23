@@ -26,7 +26,6 @@ type download struct{
 }
 
 func New(s string) *download{
-
 	// var _wg sync.WaitGroup
  return &download{
 		addr:s,
