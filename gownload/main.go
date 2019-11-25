@@ -119,7 +119,7 @@ func (g *download) ConcatParts() {
 	out, _ := os.OpenFile(g.uuid+"."+g.GetExt(), os.O_APPEND|os.O_CREATE|os.O_WRONLY|os.O_RDONLY, 0777)
 
 	for i := 0; i < int(g.n); i++ {
-		file, _ := os.OpenFile(fmt.Sprintf("%s/part%d", path.Join(os.Args[0], ".."),g.uuid, i),
+		file, _ := os.OpenFile(fmt.Sprintf("%s/%spart%d", path.Join(os.Args[0], ".."),g.uuid, i),
 			os.O_RDONLY, 0777)
 		f, _ := file.Stat()
 		var b = make([]byte, f.Size())
