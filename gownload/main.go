@@ -85,7 +85,7 @@ func (g *download) Start(n int) {
 	req.Header.Add("Range", g.ranges[n])
 	res, _ := c.Do(req)
 	//var ff *os.File
-	file, e := os.OpenFile(fmt.Sprintf("%s/part%d", path.Join(os.Args[0], ".."), n),
+	file, e := os.OpenFile(fmt.Sprintf("%s/%spart%d", path.Join(os.Args[0], ".."),g.uuid, n),
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY|os.O_RDONLY, 0777)
 	// ff=file
 	if e != nil {
@@ -115,11 +115,11 @@ func (g *download) StartAll() {
 }
 
 func (g *download) ConcatParts() {
-	os.RemoveAll(string(g.uuid[:])+"."+g.GetExt())
-	out, _ := os.OpenFile("./final.mp4", os.O_APPEND|os.O_CREATE|os.O_WRONLY|os.O_RDONLY, 0777)
+	os.RemoveAll(g.uuid+"."+g.GetExt())
+	out, _ := os.OpenFile(g.uuid+"."+g.GetExt(), os.O_APPEND|os.O_CREATE|os.O_WRONLY|os.O_RDONLY, 0777)
 
 	for i := 0; i < int(g.n); i++ {
-		file, _ := os.OpenFile(fmt.Sprintf("%s/part%d", path.Join(os.Args[0], ".."), i),
+		file, _ := os.OpenFile(fmt.Sprintf("%s/part%d", path.Join(os.Args[0], ".."),g.uuid, i),
 			os.O_RDONLY, 0777)
 		f, _ := file.Stat()
 		var b = make([]byte, f.Size())
