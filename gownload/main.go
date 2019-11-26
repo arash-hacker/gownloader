@@ -2,6 +2,7 @@ package gownload
 
 import (
 	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -32,8 +33,9 @@ type download struct {
 
 func New(s string) *download {
 	// var _wg sync.WaitGroup
-	md:=md5.Sum([]byte(s))
-	st:=string(md[:])
+	md := md5.Sum([]byte(s))
+	st := hex.EncodeToString(md[:])
+	fmt.Println(md, st)
 	return &download{
 		addr:   s,
 		size:   0,
@@ -84,10 +86,10 @@ func (g *download) Start(n int) {
 	req, _ := http.NewRequest("GET", g.addr, nil)
 	req.Header.Add("Range", g.ranges[n])
 	res, _ := c.Do(req)
-	//var ff *os.File
-	file, e := os.OpenFile(fmt.Sprintf("%s/%spart%d", path.Join(os.Args[0], ".."),g.uuid, n),
+
+	file, e := os.OpenFile(fmt.Sprintf("%s/%s.part%d", path.Join(os.Args[0], ".."), g.uuid, n),
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY|os.O_RDONLY, 0777)
-	// ff=file
+
 	if e != nil {
 		fmt.Println(" CRAETE ")
 		panic(e.Error())
@@ -97,8 +99,17 @@ func (g *download) Start(n int) {
 	file.Close()
 	g.Done()
 }
-func (g *download) Check() {
-
+func (g *download) Check() float64 {
+	var sum float64 = 0.0
+	for i := 0; i < int(g.n); i++ {
+		s, e := os.Stat(fmt.Sprintf("%s/%s.part%d", path.Join(os.Args[0], ".."), g.uuid, i))
+		if e != nil {
+			sum += 0.0
+			continue
+		}
+		sum += float64(s.Size())
+	}
+	return sum
 }
 func (g *download) GetExt() string {
 	strs := strings.Split(g.addr, ".")
@@ -113,13 +124,22 @@ func (g *download) StartAll() {
 	g.Wait()
 	fmt.Println("done printing ..")
 }
-
+func (g *download) StartAll2() {
+	for i := 0; i < len(g.ranges); i++ {
+		g.Add(1)
+		go g.Start(i)
+		// g.Start(i)
+	}
+	g.Wait()
+	fmt.Println("done printing ..")
+	g.ConcatParts()
+}
 func (g *download) ConcatParts() {
-	os.RemoveAll(g.uuid+"."+g.GetExt())
+	os.RemoveAll(g.uuid + "." + g.GetExt())
 	out, _ := os.OpenFile(g.uuid+"."+g.GetExt(), os.O_APPEND|os.O_CREATE|os.O_WRONLY|os.O_RDONLY, 0777)
 
 	for i := 0; i < int(g.n); i++ {
-		file, _ := os.OpenFile(fmt.Sprintf("%s/%spart%d", path.Join(os.Args[0], ".."),g.uuid, i),
+		file, _ := os.OpenFile(fmt.Sprintf("%s/%s.part%d", path.Join(os.Args[0], ".."), g.uuid, i),
 			os.O_RDONLY, 0777)
 		f, _ := file.Stat()
 		var b = make([]byte, f.Size())
